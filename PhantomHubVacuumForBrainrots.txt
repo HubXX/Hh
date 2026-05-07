@@ -267,7 +267,7 @@ end
 local function createMutationSelector()
     local selectorContainer = Instance.new("Frame", container)
     selectorContainer.Size = UDim2.new(1, -20, 0, 240)
-    selectorContainer.Position = UDim2.new(0, 10, 0, 800)
+    selectorContainer.Position = UDim2.new(0, 10, 0, 860)
     selectorContainer.BackgroundTransparency = 1
     selectorContainer.Name = "MutationSelectorContainer"
     selectorContainer.Visible = false
