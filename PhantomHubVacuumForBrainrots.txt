@@ -149,7 +149,7 @@ viewport.ClipsDescendants = true
 viewport.Visible = false
 
 local container = Instance.new("Frame", viewport)
-container.Size = UDim2.new(1, 0, 0, 1000)
+container.Size = UDim2.new(1, 0, 0, 1200)
 container.BackgroundTransparency = 1
 
 local scrollY = 0
@@ -170,7 +170,7 @@ end)
 viewport.InputChanged:Connect(function(input)
     if scrolling then
         local delta = input.Position.Y - scrollStart
-        scrollY = math.clamp(scrollY + delta, -800, 0)
+        scrollY = math.clamp(scrollY + delta, -900, 0)
         container.Position = UDim2.new(0,0,0,scrollY)
         scrollStart = input.Position.Y
         input:Block()
@@ -264,9 +264,13 @@ local function createIndexOption(yPos)
     return toggle, box, arrowButton
 end
 
+local mutationScrollY = 0
+local mutationScrolling = false
+local mutationScrollStart
+
 local function createMutationSelector()
     local selectorContainer = Instance.new("Frame", container)
-    selectorContainer.Size = UDim2.new(1, -20, 0, 240)
+    selectorContainer.Size = UDim2.new(1, -20, 0, 220)
     selectorContainer.Position = UDim2.new(0, 10, 0, 860)
     selectorContainer.BackgroundTransparency = 1
     selectorContainer.Name = "MutationSelectorContainer"
@@ -277,13 +281,41 @@ local function createMutationSelector()
     selectorFrame.Position = UDim2.new(0, 0, 0, 0)
     selectorFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
     selectorFrame.Name = "MutationSelector"
+    selectorFrame.ClipsDescendants = true
     createCorner(selectorFrame, 8)
     createStroke(selectorFrame, 2, Color3.fromRGB(150, 150, 150))
+
+    local mutationContent = Instance.new("Frame", selectorFrame)
+    mutationContent.Size = UDim2.new(1, 0, 0, 220)
+    mutationContent.Position = UDim2.new(0, 0, 0, 0)
+    mutationContent.BackgroundTransparency = 1
+    mutationContent.Name = "MutationContent"
+
+    selectorFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            mutationScrolling = true
+            mutationScrollStart = input.Position.Y
+        end
+    end)
+
+    selectorFrame.InputEnded:Connect(function(input)
+        mutationScrolling = false
+    end)
+
+    selectorFrame.InputChanged:Connect(function(input)
+        if mutationScrolling then
+            local delta = input.Position.Y - mutationScrollStart
+            mutationScrollY = math.clamp(mutationScrollY + delta, -40, 0)
+            mutationContent.Position = UDim2.new(0, 0, 0, mutationScrollY)
+            mutationScrollStart = input.Position.Y
+            input:Block()
+        end
+    end)
 
     local mutations = {"Normal", "Golden", "Diamond", "Galaxy", "Slime"}
     
     for i, mutation in ipairs(mutations) do
-        local mutationBox = Instance.new("Frame", selectorFrame)
+        local mutationBox = Instance.new("Frame", mutationContent)
         mutationBox.Size = UDim2.new(1, -10, 0, 35)
         mutationBox.Position = UDim2.new(0, 5, 0, 5 + (i-1) * 40)
         mutationBox.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
