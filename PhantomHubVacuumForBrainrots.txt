@@ -23,6 +23,7 @@ local autoExclusive = false
 local autoDivine = false
 local autoGOD = false
 local autoEden = false
+local autoSlimePoints = false
 local autoIndex = false
 
 local selectedMutations = {
@@ -71,6 +72,7 @@ local function saveState()
         autoDivine = autoDivine,
         autoGOD = autoGOD,
         autoEden = autoEden,
+        autoSlimePoints = autoSlimePoints,
         autoIndex = autoIndex,
         selectedMutations = selectedMutations,
         indexExpanded = indexExpanded
@@ -97,6 +99,7 @@ local function loadState()
         autoDivine = state.autoDivine or false
         autoGOD = state.autoGOD or false
         autoEden = state.autoEden or false
+        autoSlimePoints = state.autoSlimePoints or false
         autoIndex = state.autoIndex or false
         selectedMutations = state.selectedMutations or {Normal = true, Golden = true, Diamond = true, Galaxy = true, Slime = true}
         indexExpanded = false
@@ -264,7 +267,7 @@ end
 local function createMutationSelector()
     local selectorContainer = Instance.new("Frame", container)
     selectorContainer.Size = UDim2.new(1, -20, 0, 240)
-    selectorContainer.Position = UDim2.new(0, 10, 0, 810)
+    selectorContainer.Position = UDim2.new(0, 10, 0, 800)
     selectorContainer.BackgroundTransparency = 1
     selectorContainer.Name = "MutationSelectorContainer"
     selectorContainer.Visible = false
@@ -331,7 +334,8 @@ local toggle10, box10 = createOptionWithBox("Auto Exclusive", 560)
 local toggle11, box11 = createOptionWithBox("Auto Divine", 610)
 local toggle12, box12 = createOptionWithBox("Auto GOD", 660)
 local toggle13, box13 = createOptionWithBox("Auto Eden", 710)
-local toggleIndex, boxIndex, arrowButton = createIndexOption(760)
+local toggle14, box14 = createOptionWithBox("Auto Slime Points", 760)
+local toggleIndex, boxIndex, arrowButton = createIndexOption(810)
 local mutationSelector = createMutationSelector()
 
 local expanded = false
@@ -369,6 +373,7 @@ updateToggleColor(toggle10, autoExclusive)
 updateToggleColor(toggle11, autoDivine)
 updateToggleColor(toggle12, autoGOD)
 updateToggleColor(toggle13, autoEden)
+updateToggleColor(toggle14, autoSlimePoints)
 updateToggleColor(toggleIndex, autoIndex)
 
 arrowButton.MouseButton1Click:Connect(function()
@@ -476,6 +481,12 @@ end)
 toggle13.MouseButton1Click:Connect(function()
     autoEden = not autoEden
     updateToggleColor(toggle13, autoEden)
+    saveState()
+end)
+
+toggle14.MouseButton1Click:Connect(function()
+    autoSlimePoints = not autoSlimePoints
+    updateToggleColor(toggle14, autoSlimePoints)
     saveState()
 end)
 
@@ -679,6 +690,46 @@ local function collectIndexEntity()
     end
 end
 
+local function collectSlimePoints()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+    
+    local slimeCollectiblesFolder = workspace:FindFirstChild("SlimeCollectiblesFolder")
+    if not slimeCollectiblesFolder then return end
+    
+    for _, model in pairs(slimeCollectiblesFolder:GetChildren()) do
+        if model:IsA("Model") then
+            local meshPart = nil
+            for _, descendant in pairs(model:GetDescendants()) do
+                if descendant.ClassName == "MeshPart" then
+                    meshPart = descendant
+                    break
+                end
+            end
+            
+            if meshPart then
+                player.Character.HumanoidRootPart.CFrame = meshPart.CFrame
+                task.wait(0.3)
+                
+                for _, descendant in pairs(model:GetDescendants()) do
+                    if descendant:IsA("ProximityPrompt") then
+                        pcall(function()
+                            fireproximityprompt(descendant)
+                        end)
+                        break
+                    end
+                end
+                
+                task.wait(0.5)
+                player.Character.HumanoidRootPart.CFrame = teleportCFrame
+                
+                return
+            end
+        end
+    end
+end
+
 local brainrotLastFire = 0
 local brainrotCooldown = 0.1
 local moneyLastApply = 0
@@ -847,6 +898,10 @@ task.spawn(function()
 
         if autoEden then
             collectRarity("Eden")
+        end
+
+        if autoSlimePoints then
+            collectSlimePoints()
         end
 
         if autoIndex then
